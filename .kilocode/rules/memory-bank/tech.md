@@ -1,4 +1,4 @@
-# Technical Context: Next.js Starter Template
+# Technical Context: ZenFlow Wellness Platform
 
 ## Technology Stack
 
@@ -9,135 +9,135 @@
 | TypeScript   | 5.9.x   | Type-safe JavaScript            |
 | Tailwind CSS | 4.x     | Utility-first CSS               |
 | Bun          | Latest  | Package manager & runtime       |
+| Supabase     | 2.x     | Database & Auth                 |
 
-## Development Environment
+## Database Schema
 
-### Prerequisites
+### Tables
 
-- Bun installed (`curl -fsSL https://bun.sh/install | bash`)
-- Node.js 20+ (for compatibility)
+| Table | Description | Key Fields |
+|-------|-------------|------------|
+| `practitioners` | Wellness professionals | id, name, specialty, years_exp, rating, certifications[] |
+| `services` | Offered services | id, practitioner_id, name, duration_mins, price, category |
+| `availability_slots` | Bookable time slots | id, practitioner_id, date, start_time, end_time, is_booked |
+| `bookings` | Client appointments | id, client_id, service_id, status, notes |
+| `wellness_plans` | AI/personalized plans | id, client_id, goals[], assessment_json, plan_json |
+| `client_progress` | Daily wellness tracking | id, client_id, mood_score, energy_score, stress_score |
+| `reviews` | Client feedback | id, client_id, rating, comment |
 
-### Commands
+### Relationships
+
+```
+practitioners (1) ----< (N) services
+practitioners (1) ----< (N) availability_slots
+practitioners (1) ----< (N) bookings
+practitioners (1) ----< (N) reviews
+services (1) ----< (N) bookings
+services (1) ----< (N) reviews
+availability_slots (1) ----< (1) bookings
+```
+
+### RLS Policies
+
+- **Public read**: Practitioners, Services, Availability Slots, Reviews (SELECT)
+- **Authenticated write**: All tables (INSERT/UPDATE based on ownership)
+- **User-owned data**: Bookings, Wellness Plans, Client Progress (user can only access own records)
+
+## Environment Variables
 
 ```bash
-bun install        # Install dependencies
-bun dev            # Start dev server (http://localhost:3000)
-bun build          # Production build
-bun start          # Start production server
-bun lint           # Run ESLint
-bun typecheck      # Run TypeScript type checking
+# Supabase (required)
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=  # For admin operations only
 ```
 
-## Project Configuration
-
-### Next.js Config (`next.config.ts`)
-
-- App Router enabled
-- Default settings for flexibility
-
-### TypeScript Config (`tsconfig.json`)
-
-- Strict mode enabled
-- Path alias: `@/*` → `src/*`
-- Target: ESNext
-
-### Tailwind CSS 4 (`postcss.config.mjs`)
-
-- Uses `@tailwindcss/postcss` plugin
-- CSS-first configuration (v4 style)
-
-### ESLint (`eslint.config.mjs`)
-
-- Uses `eslint-config-next`
-- Flat config format
-
-## Key Dependencies
-
-### Production Dependencies
-
-```json
-{
-  "next": "^16.1.3", // Framework
-  "react": "^19.2.3", // UI library
-  "react-dom": "^19.2.3" // React DOM
-}
-```
-
-### Dev Dependencies
-
-```json
-{
-  "typescript": "^5.9.3",
-  "@types/node": "^24.10.2",
-  "@types/react": "^19.2.7",
-  "@types/react-dom": "^19.2.3",
-  "@tailwindcss/postcss": "^4.1.17",
-  "tailwindcss": "^4.1.17",
-  "eslint": "^9.39.1",
-  "eslint-config-next": "^16.0.0"
-}
-```
-
-## File Structure
+## Project Structure
 
 ```
 /
-├── .gitignore              # Git ignore rules
-├── package.json            # Dependencies and scripts
-├── bun.lock                # Bun lockfile
-├── next.config.ts          # Next.js configuration
-├── tsconfig.json           # TypeScript configuration
-├── postcss.config.mjs      # PostCSS (Tailwind) config
-├── eslint.config.mjs       # ESLint configuration
-├── public/                 # Static assets
-│   └── .gitkeep
-└── src/                    # Source code
-    └── app/                # Next.js App Router
-        ├── layout.tsx      # Root layout
-        ├── page.tsx        # Home page
-        ├── globals.css     # Global styles
-        └── favicon.ico     # Site icon
+├── src/
+│   ├── app/                 # Next.js App Router
+│   ├── lib/
+│   │   └── supabase.ts      # Supabase clients & helpers
+│   └── components/          # React components
+├── supabase/
+│   ├── schema.sql           # Database schema + RLS
+│   └── seed.sql             # Sample data
+└── ...config files
 ```
 
-## Technical Constraints
+## Supabase Client Usage
 
-### Starting Point
+### Server Components
+```tsx
+import { createServerSupabaseClient, getPractitioners } from "@/lib/supabase";
 
-- Minimal structure - expand as needed
-- No database by default (use recipe to add)
-- No authentication by default (add when needed)
+export default async function Page() {
+  const practitioners = await getPractitioners();
+  return <div>...</div>;
+}
+```
 
-### Browser Support
+### Client Components
+```tsx
+"use client";
+import { createClient } from "@/lib/supabase";
 
-- Modern browsers (ES2020+)
-- No IE11 support
+export default function Component() {
+  const supabase = createClient();
+  // use supabase...
+}
+```
 
-## Performance Considerations
+### Admin Operations (Server Only)
+```tsx
+import { createAdminClient } from "@/lib/supabase";
 
-### Image Optimization
+const admin = createAdminClient();
+// Bypass RLS for admin tasks
+```
 
-- Use Next.js `Image` component for optimization
-- Place images in `public/` directory
+## Seed Data
 
-### Bundle Size
+4 practitioners with 3 services each:
 
-- Tree-shaking enabled by default
-- Tailwind CSS purges unused styles
+1. **Sarah Chen** - Massage Therapy (12 years)
+   - Swedish Relaxation Massage ($95)
+   - Deep Tissue Therapeutic ($140)
+   - Hot Stone Healing ($125)
 
-### Core Web Vitals
+2. **Michael Rivers** - Yoga & Mindfulness (8 years)
+   - Private Vinyasa Flow ($85)
+   - Guided Meditation ($65)
+   - Restorative Yoga ($90)
 
-- Server Components reduce client JavaScript
-- Streaming and Suspense for better UX
+3. **Dr. Emily Watson** - Life Coaching (15 years)
+   - Career Transition Coaching ($175)
+   - Stress Management ($150)
+   - Personal Development ($165)
 
-## Deployment
+4. **James Okonkwo** - Nutrition Counseling (10 years)
+   - Nutrition Assessment ($130)
+   - Plant-Based Program ($110)
+   - Sports Performance ($145)
 
-### Build Output
+Plus: 30 days of availability slots (weekdays only), sample reviews.
 
-- Server-rendered pages by default
-- Can be configured for static export
+## Development Commands
 
-### Environment Variables
+```bash
+bun install        # Install dependencies
+bun dev            # Start dev server
+bun build          # Production build
+bun lint           # Run ESLint
+bun typecheck      # TypeScript check
+```
 
-- None required for base template
-- Add as needed for features
-- Use `.env.local` for local development
+## Setup Instructions
+
+1. Create Supabase project at https://supabase.com
+2. Copy project URL and anon key to `.env.local`
+3. Run `supabase/schema.sql` in Supabase SQL Editor
+4. Run `supabase/seed.sql` to populate data
+5. Add `SUPABASE_SERVICE_ROLE_KEY` for admin operations (optional)

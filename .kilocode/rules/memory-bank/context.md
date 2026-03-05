@@ -1,19 +1,25 @@
-# Active Context: Next.js Starter Template
+# Active Context: ZenFlow Wellness Platform
 
 ## Current State
 
-**Template Status**: ✅ Ready for development
+**Project Status**: ✅ Supabase Database Setup Complete
 
-The template is a clean Next.js 16 starter with TypeScript and Tailwind CSS 4. It's ready for AI-assisted expansion to build any type of application.
+The ZenFlow wellness platform now has a complete Supabase backend with:
+- 7 database tables with proper relationships
+- Row Level Security (RLS) policies configured
+- Type-safe Supabase client library
+- Comprehensive seed data (4 practitioners, 12 services, 30 days availability)
 
 ## Recently Completed
 
-- [x] Base Next.js 16 setup with App Router
-- [x] TypeScript configuration with strict mode
-- [x] Tailwind CSS 4 integration
-- [x] ESLint configuration
-- [x] Memory bank documentation
-- [x] Recipe system for common features
+- [x] Install Supabase dependencies (@supabase/supabase-js, @supabase/ssr)
+- [x] Create SQL schema for all 7 tables (practitioners, services, availability_slots, bookings, wellness_plans, client_progress, reviews)
+- [x] Set up RLS policies for each table
+- [x] Create /lib/supabase.ts with server, client, and admin instances
+- [x] Add TypeScript type definitions for all tables
+- [x] Create database helper functions (getPractitioners, getServices, etc.)
+- [x] Create comprehensive seed data SQL
+- [x] Update memory bank documentation
 
 ## Current Structure
 
@@ -22,66 +28,73 @@ The template is a clean Next.js 16 starter with TypeScript and Tailwind CSS 4. I
 | `src/app/page.tsx` | Home page | ✅ Ready |
 | `src/app/layout.tsx` | Root layout | ✅ Ready |
 | `src/app/globals.css` | Global styles | ✅ Ready |
-| `.kilocode/` | AI context & recipes | ✅ Ready |
+| `src/lib/supabase.ts` | Supabase clients & types | ✅ Complete |
+| `supabase/schema.sql` | Database schema + RLS | ✅ Complete |
+| `supabase/seed.sql` | Sample data | ✅ Complete |
+| `.kilocode/rules/memory-bank/` | AI context | ✅ Updated |
 
-## Current Focus
+## Database Tables
 
-The template is ready. Next steps depend on user requirements:
+1. **practitioners** - Wellness professionals with specialties, experience, ratings
+2. **services** - Offered services with pricing, duration, categories
+3. **availability_slots** - Bookable time slots linked to practitioners
+4. **bookings** - Client appointments with status tracking
+5. **wellness_plans** - Personalized wellness plans with AI-generated content
+6. **client_progress** - Daily wellness tracking (mood, energy, stress scores)
+7. **reviews** - Client feedback and ratings
 
-1. What type of application to build
-2. What features are needed
-3. Design/branding preferences
+## RLS Policies Summary
 
-## Quick Start Guide
+- **Public read**: Practitioners, Services, Availability Slots, Reviews
+- **Authenticated read/write**: Users own their Bookings, Wellness Plans, Client Progress
+- **Authenticated insert/update**: Practitioners, Services, Availability Slots (for admin/owner use)
 
-### To add a new page:
+## Seed Data
 
-Create a file at `src/app/[route]/page.tsx`:
-```tsx
-export default function NewPage() {
-  return <div>New page content</div>;
-}
+4 Practitioners:
+1. Sarah Chen - Massage Therapy (12 years)
+2. Michael Rivers - Yoga & Mindfulness (8 years)
+3. Dr. Emily Watson - Life Coaching (15 years)
+4. James Okonkwo - Nutrition Counseling (10 years)
+
+Each with 3 services, 30 days of weekday availability slots, and sample reviews.
+
+## Environment Variables Required
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=  # Optional, for admin operations
 ```
 
-### To add components:
+## Next Steps
 
-Create `src/components/` directory and add components:
+1. Create Supabase project and run schema.sql
+2. Run seed.sql to populate data
+3. Set up environment variables in .env.local
+4. Build frontend components (practitioner cards, booking flow, etc.)
+5. Implement authentication if needed
+
+## Quick Reference
+
+### Run in Supabase SQL Editor:
+1. Copy contents of `supabase/schema.sql`
+2. Copy contents of `supabase/seed.sql`
+
+### Use in Components:
 ```tsx
-// src/components/ui/Button.tsx
-export function Button({ children }: { children: React.ReactNode }) {
-  return <button className="px-4 py-2 bg-blue-600 text-white rounded">{children}</button>;
-}
+// Server Component
+import { getPractitioners } from "@/lib/supabase";
+const practitioners = await getPractitioners();
+
+// Client Component
+import { createClient } from "@/lib/supabase";
+const supabase = createClient();
 ```
-
-### To add a database:
-
-Follow `.kilocode/recipes/add-database.md`
-
-### To add API routes:
-
-Create `src/app/api/[route]/route.ts`:
-```tsx
-import { NextResponse } from "next/server";
-
-export async function GET() {
-  return NextResponse.json({ message: "Hello" });
-}
-```
-
-## Available Recipes
-
-| Recipe | File | Use Case |
-|--------|------|----------|
-| Add Database | `.kilocode/recipes/add-database.md` | Data persistence with Drizzle + SQLite |
-
-## Pending Improvements
-
-- [ ] Add more recipes (auth, email, etc.)
-- [ ] Add example components
-- [ ] Add testing setup recipe
 
 ## Session History
 
 | Date | Changes |
 |------|---------|
 | Initial | Template created with base setup |
+| Current | Supabase database schema, RLS, seed data, and client library added |
